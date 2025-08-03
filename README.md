@@ -48,7 +48,7 @@ Python 3.7+
 
 Nmap installed on your machine
 # Clone the repository
-git clone https://github.com/yourusername/mini-nessus.git
+git clone https://github.com/abhi-lak/mini-nessus.git
 cd mini-nessus
 
 # Install Python dependencies

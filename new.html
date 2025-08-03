@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulnerability Scanner</title>
+    <style>
+        :root {
+            --primary: 210 40% 50%;
+            --primary-foreground: 0 0% 98%;
+            --secondary: 210 40% 96%;
+            --secondary-foreground: 222.2 84% 4.9%;
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --muted: 210 40% 96%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --destructive: 0 84.2% 60.2%;
+            --warning: 38 92% 50%;
+            --success: 142 71% 45%;
+        }
+        
+        body.dark-theme {
+            --primary: 210 40% 60%;
+            --primary-foreground: 0 0% 10%;
+            --secondary: 210 40% 20%;
+            --secondary-foreground: 0 0% 98%;
+            --background: 222 47% 11%;
+            --foreground: 0 0% 98%;
+            --card: 222 47% 16%;
+            --card-foreground: 0 0% 98%;
+            --border: 210 40% 25%;
+            --input: 210 40% 25%;
+            --muted: 210 40% 20%;
+            --muted-foreground: 215.4 16.3% 70%;
+            --destructive: 0 84.2% 70.2%;
+            --warning: 38 92% 60%;
+            --success: 142 71% 55%;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: hsl(var(--muted-foreground));
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            color: hsl(var(--primary));
+            letter-spacing: 0.01em;
+        }
+
+        .card-description {
+            color: hsl(var(--secondary-foreground));
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid hsl(var(--border));
+            border-radius: 0.375rem;
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
+            font-size: 0.875rem;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: hsl(var(--primary));
+            box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+            color: hsl(var(--foreground));
+            background: hsl(var(--background));
+        }
+        input[type="text"]::placeholder {
+            color: hsl(var(--muted-foreground));
+            opacity: 1;
+            transition: color 0.2s;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--success)));
+            color: hsl(var(--primary-foreground));
+            box-shadow: 0 2px 8px hsl(var(--primary) / 0.15);
+        }
+
+        .btn-primary:hover {
+            background: hsl(var(--primary) / 0.9);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+            border: 1px solid hsl(var(--border));
+            box-shadow: 0 1px 4px hsl(var(--secondary) / 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: hsl(var(--secondary) / 0.8);
+        }
+
+        .progress {
+            width: 100%;
+            height: 0.5rem;
+            background: hsl(var(--secondary));
+            border-radius: 0.25rem;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--success)));
+            transition: width 0.3s ease;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.visible {
+            display: block;
+        }
+
+        .collapsible {
+            border: 1px solid hsl(var(--border));
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+        }
+
+        .collapsible-trigger {
+            width: 100%;
+            padding: 1rem;
+            background: none;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .collapsible-trigger span:first-child {
+            color: hsl(var(--primary));
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 0.01em;
+        }
+
+        .collapsible-trigger:hover {
+            background: hsl(var(--muted));
+        }
+
+        .collapsible-content {
+            padding: 0 1rem 1rem;
+            display: none;
+        }
+
+        .collapsible-content.open {
+            display: block;
+        }
+
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-destructive {
+            background: hsl(var(--destructive) / 0.1);
+            color: hsl(var(--destructive));
+        }
+
+        .badge-warning {
+            background: hsl(var(--warning) / 0.1);
+            color: hsl(var(--warning));
+        }
+
+        .badge-success {
+            background: hsl(var(--success) / 0.1);
+            color: hsl(var(--success));
+        }
+
+        .badge-secondary {
+            background: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+        }
+
+        .list-item {
+            padding: 0.75rem;
+            border: 1px solid hsl(var(--border));
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .list-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px hsl(var(--primary) / 0.1);
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 1.5rem;
+            right: 2rem;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: hsl(var(--card));
+            color: hsl(var(--primary));
+            border: 2px solid hsl(var(--border));
+            border-radius: 50%;
+            box-shadow: 0 2px 8px hsl(var(--primary) / 0.10);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s, transform 0.2s;
+            z-index: 100;
+        }
+        .theme-toggle:hover {
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+            border-color: hsl(var(--primary));
+            box-shadow: 0 4px 16px hsl(var(--primary) / 0.18);
+            transform: scale(1.08) rotate(-8deg);
+        }
+        .theme-toggle .icon {
+            transition: opacity 0.3s, transform 0.3s;
+            position: absolute;
+        }
+        .theme-toggle .icon-sun {
+            opacity: 0;
+            transform: scale(0.7) rotate(-30deg);
+        }
+        .theme-toggle.light .icon-sun {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+        }
+        .theme-toggle .icon-moon {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+        }
+        .theme-toggle.light .icon-moon {
+            opacity: 0;
+            transform: scale(0.7) rotate(30deg);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <span class="icon icon-moon">🌙</span>
+        <span class="icon icon-sun">☀️</span>
+    </button>
+    <div class="header">
+        <h1>🛡️ Vulnerability Scanner</h1>
+        <p>Comprehensive network security assessment tool</p>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Scan Configuration</h2>
+                <p class="card-description">Enter target IP address or range and configure scan options</p>
+            </div>
+
+            <form id="scanForm">
+                <div class="form-group">
+                    <div class="form-row">
+                        <div>
+                            <label for="target">Target IP/Range</label>
+                            <input type="text" id="target" placeholder="192.168.1.1 or 192.168.1.0/24" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="scanBtn">
+                            <span id="scanBtnText">Start Scan</span>
+                            <span id="scanSpinner" class="spinner hidden">⟳</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Scan Options</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="ports" checked>
+                            <label for="ports">Port Scanning</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="services" checked>
+                            <label for="services">Service Detection</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="weakConfigs" checked>
+                            <label for="weakConfigs">Weak Configurations</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="fetchCVEs" checked>
+                            <label for="fetchCVEs">CVE Database Lookup</label>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div id="progressSection" class="hidden">
+                <div class="progress">
+                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                </div>
+                <p id="progressText">Initializing scan...</p>
+            </div>
+        </div>
+
+        <div id="results" class="results">
+            <div class="export-buttons">
+                <button class="btn btn-secondary" onclick="exportResults('json')">Export JSON</button>
+                <button class="btn btn-secondary" onclick="exportResults('html')">Export HTML</button>
+            </div>
+
+            <div class="collapsible">
+                <button class="collapsible-trigger" onclick="toggleSection('ports')">
+                    <span>Open Ports (<span id="portsCount">0</span>)</span>
+                    <span>▼</span>
+                </button>
+                <div class="collapsible-content" id="portsContent"></div>
+            </div>
+
+            <div class="collapsible">
+                <button class="collapsible-trigger" onclick="toggleSection('services')">
+                    <span>Detected Services (<span id="servicesCount">0</span>)</span>
+                    <span>▼</span>
+                </button>
+                <div class="collapsible-content" id="servicesContent"></div>
+            </div>
+
+            <div class="collapsible">
+                <button class="collapsible-trigger" onclick="toggleSection('weakConfigs')">
+                    <span>Weak Configurations (<span id="weakConfigsCount">0</span>)</span>
+                    <span>▼</span>
+                </button>
+                <div class="collapsible-content" id="weakConfigsContent"></div>
+            </div>
+
+            <div class="collapsible">
+                <button class="collapsible-trigger" onclick="toggleSection('cves')">
+                    <span>CVE Findings (<span id="cvesCount">0</span>)</span>
+                    <span>▼</span>
+                </button>
+                <div class="collapsible-content" id="cvesContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scanResults = null;
+        let openSections = {};
+
+        const themeToggle = document.getElementById('themeToggle');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        function setTheme(dark) {
+            if (dark) {
+                document.body.classList.add('dark-theme');
+                themeToggle.classList.remove('light');
+            } else {
+                document.body.classList.remove('dark-theme');
+                themeToggle.classList.add('light');
+            }
+        }
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (savedTheme === null && prefersDark)) {
+            setTheme(true);
+        } else {
+            setTheme(false);
+        }
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.body.classList.toggle('dark-theme');
+            setTheme(isDark);
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+
+        document.getElementById('scanForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await handleScan();
+        });
+
+        async function handleScan() {
+            const target = document.getElementById('target').value.trim();
+            const options = {
+                ports: document.getElementById('ports').checked,
+                services: document.getElementById('services').checked,
+                weakConfigs: document.getElementById('weakConfigs').checked,
+                fetchCVEs: document.getElementById('fetchCVEs').checked
+            };
+
+            if (!target) {
+                alert('Please enter a target IP address or range');
+                return;
+            }
+
+          
+            showProgress();
+            
+            try {
+               
+                const response = await fetch('/scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        target: target,
+                        options: options
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Scan failed');
+                }
+
+                scanResults = await response.json();
+                displayResults();
+                
+            } catch (error) {
+                console.error('Scan error:', error);
+                alert('Scan failed: ' + error.message);
+            } finally {
+                hideProgress();
+            }
+        }
+
+        function showProgress() {
+            document.getElementById('scanBtn').disabled = true;
+            document.getElementById('scanBtnText').textContent = 'Scanning...';
+            document.getElementById('scanSpinner').classList.remove('hidden');
+            document.getElementById('progressSection').classList.remove('hidden');
+            
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress >= 90) {
+                    clearInterval(interval);
+                    progress = 90;
+                }
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('progressText').textContent = 
+                    `Scanning... ${Math.round(progress)}%`;
+            }, 200);
+        }
+
+        function hideProgress() {
+            document.getElementById('scanBtn').disabled = false;
+            document.getElementById('scanBtnText').textContent = 'Start Scan';
+            document.getElementById('scanSpinner').classList.add('hidden');
+            document.getElementById('progressSection').classList.add('hidden');
+            document.getElementById('progressBar').style.width = '100%';
+        }
+
+        function displayResults() {
+            if (!scanResults) return;
+
+            document.getElementById('results').classList.add('visible');
+
+            
+            const portsContent = document.getElementById('portsContent');
+            document.getElementById('portsCount').textContent = scanResults.openPorts.length;
+            portsContent.innerHTML = scanResults.openPorts.map(port => `
+                <div class="list-item">
+                    <strong>Port ${port.port}/${port.protocol}</strong>
+                    <span class="badge badge-success">Open</span>
+                    <br>
+                    <small>Service: ${port.service}</small>
+                </div>
+            `).join('');
+
+            const servicesContent = document.getElementById('servicesContent');
+            document.getElementById('servicesCount').textContent = scanResults.services.length;
+            servicesContent.innerHTML = scanResults.services.map(service => `
+                <div class="list-item">
+                    <strong>${service.service || "Unknown Service"}${service.banner ? " - " + service.banner : ""}</strong>
+                    <br>
+                    <small>Port: ${service.port || "N/A"} | Banner: ${service.banner || "N/A"}</small>
+                </div>
+            `).join('');
+
+            
+
+            const weakConfigsContent = document.getElementById('weakConfigsContent');
+            document.getElementById('weakConfigsCount').textContent = scanResults.weakConfigurations.length;
+            weakConfigsContent.innerHTML = scanResults.weakConfigurations.map(config => `
+                <div class="list-item">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <strong>${config.title}</strong>
+                            <br>
+                            <small>${config.description}</small>
+                        </div>
+                        <span class="badge ${getSeverityBadgeClass(config.severity)}">${config.severity}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Display CVEs
+            const cvesContent = document.getElementById('cvesContent');
+            document.getElementById('cvesCount').textContent = scanResults.cves.length;
+            cvesContent.innerHTML = scanResults.cves.map(cve => `
+                <div class="list-item">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <strong>${cve.id}</strong>
+                            <br>
+                            <small>CVSS: ${cve.cvss} | ${cve.description}</small>
+                        </div>
+                        <span class="badge ${getSeverityBadgeClass(cve.severity)}">${cve.severity}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getSeverityBadgeClass(severity) {
+            switch (severity.toLowerCase()) {
+                case 'critical':
+                case 'high':
+                    return 'badge-destructive';
+                case 'medium':
+                    return 'badge-warning';
+                case 'low':
+                    return 'badge-success';
+                default:
+                    return 'badge-secondary';
+            }
+        }
+
+        function toggleSection(section) {
+            const content = document.getElementById(section + 'Content');
+            const isOpen = content.classList.contains('open');
+            
+            if (isOpen) {
+                content.classList.remove('open');
+            } else {
+                content.classList.add('open');
+            }
+        }
+
+        function exportResults(format) {
+            if (!scanResults) return;
+
+            if (format === 'json') {
+                const dataStr = JSON.stringify(scanResults, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `vulnerability-scan-${Date.now()}.json`;
+                link.click();
+            } else if (format === 'html') {
+                const htmlReport = generateHTMLReport(scanResults);
+                const dataBlob = new Blob([htmlReport], {type: 'text/html'});
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `vulnerability-report-${Date.now()}.html`;
+                link.click();
+            }
+        }
+
+        function generateHTMLReport(data) {
+            return `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Vulnerability Scan Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .header { text-align: center; margin-bottom: 30px; }
+                        .section { margin-bottom: 20px; }
+                        .severity-critical { color: #dc2626; }
+                        .severity-high { color: #ea580c; }
+                        .severity-medium { color: #ca8a04; }
+                        .severity-low { color: #16a34a; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Vulnerability Scan Report</h1>
+                        <p>Target: ${data.ip}</p>
+                        <p>Generated: ${new Date().toLocaleString()}</p>
+                    </div>
+                    
+                    <div class="section">
+                        <h2>Open Ports (${data.openPorts.length})</h2>
+                        <table>
+                            <tr><th>Port</th><th>Protocol</th><th>Service</th></tr>
+                            ${data.openPorts.map(port => 
+                                `<tr><td>${port.port}</td><td>${port.protocol}</td><td>${port.service}</td></tr>`
+                            ).join('')}
+                        </table>
+                    </div>
+                    
+                    <div class="section">
+                        <h2>CVE Findings (${data.cves.length})</h2>
+                        <table>
+                            <tr><th>CVE ID</th><th>Severity</th><th>CVSS</th><th>Description</th></tr>
+                            ${data.cves.map(cve => 
+                                `<tr><td>${cve.id}</td><td class="severity-${cve.severity.toLowerCase()}">${cve.severity}</td><td>${cve.cvss}</td><td>${cve.description}</td></tr>`
+                            ).join('')}
+                        </table>
+                    </div>
+                </body>
+                </html>
+            `;
+        }
+    </script>
+</body>
+</html>
